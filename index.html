@@ -234,7 +234,7 @@ function aviso(titulo, info) {
 
 // ====== BUSCA OS DADOS NO THINGSPEAK ======
 async function carregar() {
-  if (CHANNEL_ID.includes("3550129")) {
+  if (CHANNEL_ID.includes("COLE")) {
     aviso("Falta configurar o canal", "Abra o arquivo index.html e troque CHANNEL_ID pelo número do seu canal do ThingSpeak.");
     return;
   }
