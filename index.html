@@ -108,7 +108,7 @@ footer { color: var(--muted); font-size: 0.85rem; }
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 // ====== CONFIGURAÇÃO ======
-const CHANNEL_ID = "COLE_AQUI_O_CHANNEL_ID";  // número do canal no ThingSpeak
+const CHANNEL_ID = "3550129";  // número do canal no ThingSpeak
 const READ_API_KEY = "";                      // só preencha se o canal for privado (nunca a Write Key!)
 const RESULTADOS = 300;                       // quantas leituras buscar
 const ATUALIZA_A_CADA = 20000;                // ms entre atualizações da página
@@ -234,7 +234,7 @@ function aviso(titulo, info) {
 
 // ====== BUSCA OS DADOS NO THINGSPEAK ======
 async function carregar() {
-  if (CHANNEL_ID.includes("COLE")) {
+  if (CHANNEL_ID.includes("3550129")) {
     aviso("Falta configurar o canal", "Abra o arquivo index.html e troque CHANNEL_ID pelo número do seu canal do ThingSpeak.");
     return;
   }
