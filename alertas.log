@@ -1,0 +1,2 @@
+30/10/2026, 19:13:59 | ALERTA | temp-alta | Temperatura alta (Temperatura = 71; regra: > 35)
+30/10/2026, 19:13:59 | ALERTA | umid-baixa | Umidade baixa (Umidade = 27.5; regra: < 30)
