@@ -1,0 +1,10 @@
+{
+  "channel_id": "3550129",
+  "retencao_dias": 7,
+  "avisar_normalizacao": true,
+  "regras": [
+    { "id": "falha", "nome": "Falha do sistema", "campo": "falha", "operador": "==", "valor": 1, "ativo": true, "prioridade": "urgent" },
+    { "id": "temp-alta", "nome": "Temperatura alta", "campo": "temp", "operador": ">", "valor": 35, "ativo": true, "prioridade": "high" },
+    { "id": "umid-baixa", "nome": "Umidade baixa", "campo": "umid", "operador": "<", "valor": 30, "ativo": true, "prioridade": "default" }
+  ]
+}

@@ -65,6 +65,14 @@ td.mudou { font-weight: 700; color: var(--accent); }
 tr.linha-falha td { background: color-mix(in srgb, var(--bad) 14%, transparent); }
 .selo { background: var(--bad); color: var(--on-bad); padding: 1px 8px; border-radius: 3px; font-weight: 700; }
 .nota { color: var(--muted); font-size: 0.9rem; margin: 12px 0 0; }
+.log { background: var(--bg); padding: 12px; margin: 0; overflow: auto; max-height: 240px; white-space: pre-wrap; font-size: 0.85rem; }
+.regra { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.regra label { min-width: 200px; }
+input { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); padding: 4px 8px; border-radius: 4px; }
+.regra input[type="number"] { width: 6em; }
+details { margin-top: 12px; }
+summary { cursor: pointer; }
+.btn { font: inherit; cursor: pointer; background: var(--accent); color: var(--surface); border: 0; padding: 8px 16px; border-radius: 4px; }
 footer { color: var(--muted); font-size: 0.85rem; }
 </style>
 </head>
@@ -100,6 +108,25 @@ footer { color: var(--muted); font-size: 0.85rem; }
       </table>
     </div>
     <p class="nota">Valores em destaque são os que mudaram em relação à coleta anterior. Mostra as 50 coletas mais recentes.</p>
+  </section>
+
+  <section class="bloco">
+    <h2>Registro de alertas</h2>
+    <pre class="log" id="log">Carregando…</pre>
+    <p class="nota">Conteúdo do arquivo alertas.log (20 registros mais recentes). As regras são avaliadas pelo GitHub Actions a cada cerca de 10 minutos, podendo haver atraso.</p>
+  </section>
+
+  <section class="bloco">
+    <h2>Configuração dos alertas</h2>
+    <div id="regras">Carregando…</div>
+    <p><label>Guardar os dados por <input id="retencao" type="number" min="1" max="365" style="width:5em"> dias</label></p>
+    <details>
+      <summary>Salvar no GitHub</summary>
+      <p class="nota">Cole um token do GitHub com permissão de escrita apenas neste repositório. Ele é usado só para este envio e não fica guardado.</p>
+      <p><input id="repo" placeholder="usuario/repositorio" size="28"> <input id="token" type="password" placeholder="Token do GitHub" size="28"></p>
+      <button class="btn" id="salvar">Salvar configuração</button>
+    </details>
+    <p class="nota" id="msgConfig" role="status"></p>
   </section>
 
   <footer id="rodape"></footer>
@@ -269,8 +296,77 @@ $("abas").addEventListener("click", ev => {
   if (lista.length) renderGrafico();
 });
 
+// ====== ALERTAS E CONFIGURAÇÃO (arquivos do próprio repositório) ======
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const nomesCampo = { temp: "Temperatura", umid: "Umidade", luz: "Luminosidade", falha: "Falha" };
+let cfg = null;
+
+async function carregarLog() {
+  try {
+    const r = await fetch("alertas.log?" + Date.now());
+    if (!r.ok) throw new Error();
+    const linhas = (await r.text()).split("\n").filter(Boolean);
+    $("log").textContent = linhas.length ? linhas.slice(-20).reverse().join("\n") : "Nenhum alerta registrado ainda.";
+  } catch (e) {
+    $("log").textContent = "Não foi possível ler o alertas.log.";
+  }
+}
+
+function renderRegras() {
+  $("regras").innerHTML = cfg.regras.map((r, i) =>
+    '<div class="regra"><label><input type="checkbox" data-i="' + i + '" data-k="ativo"' + (r.ativo ? " checked" : "") + "> " + esc(r.nome) + "</label>" +
+    "<span>" + nomesCampo[r.campo] + " " + esc(r.operador) + '</span><input type="number" step="any" data-i="' + i + '" data-k="valor" value="' + esc(r.valor) + '"' +
+    (r.campo === "falha" ? " disabled" : "") + "></div>").join("");
+  $("retencao").value = cfg.retencao_dias;
+}
+
+async function carregarConfig() {
+  try {
+    const r = await fetch("config.json?" + Date.now());
+    cfg = await r.json();
+    renderRegras();
+  } catch (e) {
+    $("regras").textContent = "Não foi possível ler o config.json.";
+  }
+}
+
+$("regras").addEventListener("input", ev => {
+  const el = ev.target, i = el.dataset.i, k = el.dataset.k;
+  if (!cfg || i === undefined) return;
+  cfg.regras[i][k] = k === "ativo" ? el.checked : Number(el.value);
+});
+$("retencao").addEventListener("input", ev => { if (cfg) cfg.retencao_dias = Number(ev.target.value); });
+
+async function salvarConfig() {
+  const msg = $("msgConfig"), repo = $("repo").value.trim(), token = $("token").value.trim();
+  if (!cfg || !repo || !token) { msg.textContent = "Preencha o repositório e o token."; return; }
+  const url = "https://api.github.com/repos/" + repo + "/contents/config.json";
+  const h = { Authorization: "Bearer " + token, Accept: "application/vnd.github+json" };
+  try {
+    const atual = await fetch(url, { headers: h });
+    if (!atual.ok) throw new Error("HTTP " + atual.status + " ao ler o arquivo (confira o repositório e o token)");
+    const sha = (await atual.json()).sha;
+    const corpo = { message: "Atualiza configuração pelo dashboard", sha,
+      content: btoa(unescape(encodeURIComponent(JSON.stringify(cfg, null, 2) + "\n"))) };
+    const r = await fetch(url, { method: "PUT", headers: { ...h, "Content-Type": "application/json" }, body: JSON.stringify(corpo) });
+    if (!r.ok) throw new Error("HTTP " + r.status + " ao salvar (o token precisa de permissão de escrita em Contents)");
+    $("token").value = "";
+    msg.textContent = "Configuração salva. A próxima execução do motor de regras já usa os novos valores.";
+  } catch (e) {
+    msg.textContent = "Erro: " + e.message;
+  }
+}
+$("salvar").addEventListener("click", salvarConfig);
+
+if (location.hostname.endsWith("github.io")) {
+  $("repo").value = location.hostname.split(".")[0] + "/" + location.pathname.split("/")[1];
+}
+
 carregar();
+carregarConfig();
+carregarLog();
 setInterval(carregar, ATUALIZA_A_CADA);
+setInterval(carregarLog, ATUALIZA_A_CADA);
 </script>
 </body>
 </html>

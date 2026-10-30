@@ -1,0 +1,40 @@
+name: Motor de regras
+
+on:
+  schedule:
+    # A cada 10 minutos (o mínimo permitido é 5). Minutos "quebrados" evitam o horário de pico.
+    # O GitHub não garante pontualidade: pode haver atrasos.
+    - cron: "3,13,23,33,43,53 * * * *"
+  workflow_dispatch:   # permite rodar manualmente pela aba Actions
+
+permissions:
+  contents: write      # necessário para gravar dados.json, alertas.log e estado.json
+
+concurrency:
+  group: motor-de-regras
+  cancel-in-progress: false
+
+jobs:
+  executar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o repositório
+        uses: actions/checkout@v4
+
+      - name: Rodar o motor de regras
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}   # nome do tópico guardado em Settings > Secrets
+        run: node scripts/motor.js
+
+      - name: Salvar alterações no repositório
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dados.json alertas.log estado.json
+          if git diff --staged --quiet; then
+            echo "Nada novo para salvar."
+          else
+            git commit -m "Atualiza dados e alertas"
+            git pull --rebase
+            git push
+          fi
