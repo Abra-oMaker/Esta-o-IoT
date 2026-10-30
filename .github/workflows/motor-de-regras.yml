@@ -4,7 +4,7 @@ on:
   schedule:
     # A cada 10 minutos (o mínimo permitido é 5). Minutos "quebrados" evitam o horário de pico.
     # O GitHub não garante pontualidade: pode haver atrasos.
-    - cron: "3,13,23,33,43,53 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:   # permite rodar manualmente pela aba Actions
 
 permissions:
