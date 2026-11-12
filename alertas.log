@@ -2,3 +2,4 @@
 30/10/2026, 19:13:59 | ALERTA | umid-baixa | Umidade baixa (Umidade = 27.5; regra: < 30)
 12/11/2026, 04:38:02 | NORMALIZADO | temp-alta | Temperatura alta (Temperatura = 24; regra: > 35) - voltou ao normal
 12/11/2026, 04:38:03 | NORMALIZADO | umid-baixa | Umidade baixa (Umidade = 82; regra: < 30) - voltou ao normal
+12/11/2026, 19:15:29 | ALERTA | temp-alta | Temperatura alta (Temperatura = 52.4; regra: > 35)
