@@ -9,3 +9,4 @@
 19/11/2026, 22:45:51 | NORMALIZADO | umid-baixa | Umidade baixa (Umidade = 39.5; regra: < 30) - voltou ao normal
 19/11/2026, 22:50:16 | ALERTA | umid-baixa | Umidade baixa (Umidade = 23.5; regra: < 30)
 19/11/2026, 22:52:15 | NORMALIZADO | umid-baixa | Umidade baixa (Umidade = 82; regra: < 30) - voltou ao normal
+20/11/2026, 21:15:17 | NORMALIZADO | temp-alta | Temperatura alta (Temperatura = 24; regra: > 35) - voltou ao normal
